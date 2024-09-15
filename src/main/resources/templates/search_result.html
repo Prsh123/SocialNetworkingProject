@@ -1,0 +1,29 @@
+<div th:if="${#lists.isEmpty(results)}">
+        <h4>No results</h4>
+    </div>
+
+    <!-- Iterate over the list of friends -->
+    <div th:each="friend : ${results}" class="search-result-box-content-item">
+        <img th:src="'data:image/png;base64,' + ${friend.avatar}" style="margin-right: 20px; margin-bottom: 20px">
+        <span>
+            <a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+               th:text="${friend.fname} + ' ' + ${friend.lname}">Friend Name</a>
+            <a href="#" th:text="${friend.mutual_no} + ' mutual friends'">Mutual Friends</a>
+        </span>
+        
+            <!-- Render the correct button based on isFriend value -->
+            <th:block th:switch="${friend.friend}">
+			    <button th:case="'friend'">
+			        <i class="fa fa-check" aria-hidden="true"></i> Friends
+			    </button>
+			    <button th:case="'requested'">
+			        <i class="fa fa-hourglass-half" aria-hidden="true"></i> Request Sent
+			    </button>
+			    <button th:case="'nofriend'" type="button" class="addfriend" th:data-id="${friend.id}">
+			        <i class="fa fa-user-plus"></i> Add Friend
+			    </button>
+			    <button th:case="'self'" type="button">
+			        <i class="fa fa-user"></i> Current User
+			    </button>
+			</th:block>
+        </div>

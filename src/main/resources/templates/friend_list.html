@@ -1,0 +1,282 @@
+<style>
+
+#chat-box .chat-list {
+    height: 100%; /* Ensure this takes up the full height of #chat-box */
+    display: flex;
+    flex-direction: column;
+}
+
+#chat-box .chat-list ul {
+    flex: 1; /* This makes sure the ul takes up the remaining space */
+    overflow-y: auto; /* Enables scrolling */
+    margin: 0;
+    padding: 10px;
+    list-style-type: none; /* Removes bullets from list items */
+}
+
+#chat-box .chat-list form {
+    padding: 10px;
+}
+
+.chat-time {
+    display: flex;
+    flex-direction: column; /* Stack date and time vertically */
+    margin-top: 5px; /* Space between message and time */
+    font-size: 0.9em; /* Optional: smaller font size for time */
+    color: #888; /* Optional: different color for time */
+}
+
+.chat-date {
+    font-weight: bold; /* Optional: make date more prominent */
+}
+
+.chat-time span {
+    display: block; /* Ensure each line is displayed separately */
+}
+
+</style>
+
+<div class="widget friend-list stick-widget">
+    <h4 class="widget-title">Friends</h4>
+    <div id="searchDir"></div>
+    <ul id="people-list" class="friendz-list">
+        <div th:each="friend : ${session.friend_list}">
+            <li th:id="${friend.id}">
+                <figure>
+                    <img class="avatar-small"
+                         th:src="'data:image/jpeg;base64,' + ${#strings.trim(friend.avatar)}">
+                </figure>
+                <div class="friendz-meta">
+                    <a href="#" class="friend-link"
+                       th:data-friend-id="${friend.id}"
+                       th:data-friend-name="${friend.fname} + ' ' + ${friend.lname}"
+                       th:text="${friend.fname} + ' ' + ${friend.lname}"></a>
+                </div>
+            </li>
+        </div>
+    </ul>
+
+    <div id="chat-box" class="chat-box hidden" style="z-index: 9999; position: fixed;">
+        <div class="chat-head">
+            <span class="status f-online"></span>
+            <h6 id="chat-friend-name">Chat Friend</h6>
+            <div class="more">
+                <span><i class="ti-more-alt"></i></span>
+                <span class="close-message"><i class="ti-close"></i></span>
+            </div>
+        </div>
+        
+        <div class="chat-list">
+            <ul>
+
+ 			
+            </ul>
+            <form id="chatForm" class="text-box" enctype="multipart/form-data">
+                <input type="hidden" name="friend_id" value="">
+                <input type="text" name="message" placeholder="Post enter to post..." style="width:65%">
+                <i class="fa fa-image image-icon" style="cursor: pointer;"></i>
+                <input type="file" name="image" id="image" accept="image/*" style="display: none;">
+                <input type="submit" id="sendMessage" value="send">
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let pollingInterval; // Variable to store the polling interval
+let currentChatId = null; // Variable to store the currently active chatbox ID
+
+$(function () {
+    $('.image-icon').click(function() {
+        $('#image').click();
+    });
+
+    $('#sendMessage').click(function (event) {
+        event.preventDefault(); 
+
+        let formData = new FormData();
+        let message = $('input[name="message"]').val();
+        formData.append('message', message);
+        
+        let friend_id = $('input[name="friend_id"]').val();
+        formData.append('friend_id', friend_id);
+
+        let imageFile = $('input[name="image"]')[0].files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        $.ajax({
+            url: 'chat',
+            type: 'POST',
+            data: formData, 
+            processData: false,
+            contentType: false, 
+            success: function (data) {
+                if (data.result === "OK") {
+                    $('input[name="message"]').val('');
+                    $('input[name="image"]').val('');
+
+                    var scroll = true;
+                    fetchChatHistory(friend_id, scroll);
+                } else {
+                    console.log('Error in server response.');
+                }
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error: ', textStatus, errorThrown);
+                alert('Error sending message. Please try again later.');
+            }
+        });
+    });
+});
+
+function formatDateTime(dateTimeString) {
+    const dateTime = new Date(dateTimeString);
+    const dateOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+    const dateFormatted = new Intl.DateTimeFormat('en-US', dateOptions).format(dateTime);
+
+    const timeOptions = {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true 
+    };
+    const timeFormatted = new Intl.DateTimeFormat('en-US', timeOptions).format(dateTime);
+
+    return {
+        date: dateFormatted,
+        time: timeFormatted
+    };
+}
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.chat-item').forEach(item => {
+        const chatTime = item.getAttribute('data-chat-time');
+        const { date, time } = formatDateTime(chatTime);
+
+        item.querySelector('.chat-time.date').textContent = date;
+        item.querySelector('.chat-time.time').textContent = time;
+    });
+});
+function fetchChatHistory(friendId, scroll) {
+    $.ajax({
+        url: 'chat', // URL of the servlet that loads chat history
+        type: 'GET',
+        data: { friend_id: friendId },
+        dataType: 'json', // Send friend ID to the servlet
+        success: function(response) {
+            var chatData = response.chatHistory;
+            var chatFriend = response.chatFriend;
+            var chatList = document.querySelector('#chat-box .chat-list ul');
+            chatList.innerHTML = '';
+            var currentUserId = [[${session.user.id}]];
+            var currentUserAvatar = '[[${session.user.avatar}]]';
+			var UserName = '[[${session.user.fname}]] [[${session.user.lname}]]';
+			console.log(UserName);
+            var friendName = chatFriend ? chatFriend.fname + ' ' + chatFriend.lname : 'Unknown';
+            var friendAvatar = chatFriend ? chatFriend.avatar : 'default-avatar-url'; // Use a default image URL if necessary
+
+            chatData.forEach(function(chat) {
+            	
+                var content;
+                if(chat.message!=null || chat.image!=null){
+                if (chat.sender == currentUserId) { 
+                    content = '<li class="you">' +
+                    
+                        '<div class="chat-thumb" style="width:200px; display: flex; align-items: right; justify-content: flex-end;">' +
+                        '<p  style=" padding-right:10px">'+UserName+'</p>'+
+                        '<img src="data:image/png;base64,' + currentUserAvatar + '" style="margin-right: 20px; margin-bottom: 20px; width:44.100px;height:44.100px;">' +
+                        
+                        '</div>' +
+                        '<div class="notification-event" style="width:200px; word-wrap: break-word;">';
+                    if(chat.message != ""){
+                        content += '<span class="chat-message-item" style="display: block; overflow-wrap: break-word; word-break: break-word;">' + chat.message + '</span>';
+                    }
+                    if (chat.image != null) {
+                        content += '<img src="data:image/png;base64,' + chat.image + '" >';
+                    }
+                    content +=
+                    '</li>';
+                } 
+                
+                
+                
+                
+                else {
+                    content = '<li class="me">' +
+                        '<div class="chat-thumb" style="width:200px;display: flex; align-items: left; justify-content: left;">' +
+                        
+                        '<img src="data:image/png;base64,' + friendAvatar + '" style="margin-right: 20px; margin-bottom: 20px;width:44.100px;">' +
+                        '<p>'+friendName+'</p>'+
+                        '</div>' +
+                        '<div class="notification-event" style="width:200px; word-wrap: break-word;">';
+                    if(chat.message != ""){
+                        content += '<span class="chat-message-item" style="display: block; overflow-wrap: break-word; word-break: break-word;">' + chat.message + '</span>';
+                    }
+                    if (chat.image != null) {
+                        content += '<img src="data:image/png;base64,' + chat.image + '" >';
+                    }
+                    content += 
+                    '</li>';
+                }
+
+                $(chatList).append(content);
+                }else{
+                	console.log("no message");
+                }
+            });
+
+            // Scroll the chat list to the bottom
+            if (scroll) {
+                chatList.scrollTop = chatList.scrollHeight;
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error: ', textStatus, errorThrown);
+        }
+    });
+}
+
+function startPolling(friendId) {
+    if (currentChatId !== null) {
+        stopPolling();
+    }
+    
+    currentChatId = friendId;
+    
+    pollingInterval = setInterval(function() {
+        var scroll = false;
+        
+    }, 10000); 
+}
+
+function stopPolling() {
+    clearInterval(pollingInterval);
+    currentChatId = null;
+}
+
+document.querySelector('.close-message').addEventListener('click', function() {
+    var chatBox = document.getElementById('chat-box');
+    chatBox.classList.remove('show');
+
+    stopPolling();
+});
+
+document.querySelectorAll('.friend-link').forEach(function(link) {
+    link.addEventListener('click', function(event) {
+        var friendId = this.getAttribute('data-friend-id');
+        var friendName = this.getAttribute('data-friend-name');
+
+        var chatBox = document.getElementById('chat-box');
+        chatBox.classList.add('show');
+        document.getElementById('chat-friend-name').textContent = friendName;
+        document.querySelector('input[name="friend_id"]').value = friendId;
+        var scroll = true;
+        fetchChatHistory(friendId, scroll);
+        startPolling(friendId);
+    });
+});
+</script>

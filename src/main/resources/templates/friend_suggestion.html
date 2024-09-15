@@ -1,0 +1,76 @@
+<div class="widget friend-list stick-widget">
+    <h4 class="widget-title">Friend Recommendation</h4>
+    <div id="searchDir"></div>
+    <ul id="people-list" class="friendz-list" style="max-height: 350px; overflow-y: auto;">
+        <div th:each="friend : ${session.suggested_friends}" class="friend-item">
+            <figure>
+                <img class="avatar-small"
+                     th:src="'data:image/jpeg;base64,' + ${#strings.trim(friend.avatar)}">
+            </figure>
+            <div class="friendz-meta">
+                 <a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+   th:text="${friend.fname} + ' ' + ${friend.lname}"></a>
+                <button type="submit" th:id="${friend.id}" class="btn btn-primary btn-sm"
+                        style="opacity: 0.8; font-size: 10px; padding: 4px 8px;">
+                    Add friend
+                </button>
+            </div>
+        </div>
+    </ul>
+</div>
+
+<script>
+    $(function () {
+        $('.friend-item button').click(function () {
+            var friendId = $(this).attr('id');
+            $.ajax({
+                url: 'sendRequest',
+                type: 'POST',
+                data: {
+                    friendId: friendId
+                },
+                success: function (data) {
+                    $('#friend_suggestion').html(data);
+                    $('#friend_list').load("friendlist");
+                },
+                error: function () {
+                    alert('Cannot add friend');
+                }
+            });
+        });
+    });
+</script>
+
+<script>
+  $(document).ready(function() {
+    $('[id^="friendName-"]').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var userId = [[${session.user.id}]]; // Pass the user ID from Thymeleaf
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      console.log(userId); // Corrected from console(userId) to console.log(userId)
+
+      if (friendId == userId) {
+        // If friendId is equal to userId, redirect directly to the new page
+        window.location.href = '/timeline';
+      } else {
+        // Otherwise, use AJAX to fetch the timeline data
+        $.ajax({
+          url: '/friendtimeline', // Your endpoint for the friend timeline
+          type: 'GET',
+          data: { id: friendId }, // Pass the friend ID as a query parameter
+          success: function(response) {
+            // Handle the response from the server
+            window.location.href = '/friendtimeline?id=' + friendId;
+            // Optionally update the page with the timeline data here
+          },
+          error: function(xhr, status, error) {
+            // Handle any errors that occur
+            console.error('Error fetching timeline:', error);
+          }
+        });
+      }
+    });
+  });
+</script>

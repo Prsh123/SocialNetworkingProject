@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+     <title th:text="${session.friend.fname} + ' ' + ${session.friend.lname}"></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <link rel="icon" href="/images/fav.png" type="image/png" sizes="16x16">
+    <link rel="stylesheet" href="/css/main.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/color.css">
+    <link rel="stylesheet" href="/css/responsive.css">
+</head>
+
+<body>
+    <!--This is top bar-->
+    <div th:insert="navbar.html"></div>
+    <div th:insert="friend_profile_nav.html"></div>
+    <!-- topbar -->
+
+    <section>
+        <div class="gap gray-bg" style="padding: 100px 0;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row" id="page-contents">
+                            <div class="col-lg-3">
+                                <aside class="sidebar static">
+                                    <!--left bar-->
+                                    <div th:insert="edit_bar.html"></div>
+                                    <!-- Shortcuts -->
+                                </aside>
+                            </div><!-- sidebar -->
+                            <div class="col-lg-6">
+                                <div class="central-meta">
+                                    <div class="frnds">
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item">
+                                                <a class="active" href="#frends" data-toggle="tab">Friends</a>
+                                                <span th:text="${session.friend_friend_no}"></span>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a href="#frends-req" data-toggle="tab">Mutual Friends</a>
+                                                <span th:text="${session.mutual_friend_no}"></span>
+                                            </li>
+                                        </ul>
+
+                                        <!-- Tab panes -->
+                                        <div class="tab-content">
+                                            <div class="tab-pane active fade show" id="frends">
+                                                <ul class="nearby-contct">
+                                                        <li th:id="${friend.id}"th:each="friend : ${session.friend_friends_list}">
+                                                            <div class="nearly-pepls">
+                                                                <figure>
+                                                                    <img th:if="${friend.avatar}" class="avatar-small"
+                                                                        th:src="'data:image/jpeg;base64,' + ${friend.avatar}"
+                                                                        alt="Avatar">
+                                                                    <img th:unless="${friend.avatar}" class="avatar-small"
+                                                                        src="/images/resources/friend-avatar.jpg" alt="Default Avatar">
+                                                                </figure>
+                                                                <div class="pepl-info">
+                                                                    <h4><a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+                                                                            title=""> 
+                                                                            <span th:text="${friend.fname}"></span>
+                                                                            <span th:text="${friend.lname}"></span>
+                                                                        </a></h4>
+                                                                    
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="tab-pane fade" id="frends-req">
+                                                <ul class="nearby-contct">
+                                                        <li th:each="friend : ${session.mutual_friends_list}">
+                                                            <div class="nearly-pepls">
+                                                                <figure>
+                                                                    <img th:if="${friend.avatar}" class="avatar-small"
+                                                                        th:src="'data:image/jpeg;base64,' + ${friend.avatar}"
+                                                                        alt="Avatar">
+                                                                    <img th:unless="${friend.avatar}" class="avatar-small"
+                                                                        src="/images/resources/friend-avatar.jpg" alt="Default Avatar">
+                                                                </figure>
+                                                                <div class="pepl-info">
+                                                                    <h4><a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+                                                                            title="">
+                                                                            <span th:text="${friend.fname}"></span>
+                                                                            <span th:text="${friend.lname}"></span>
+                                                                        </a></h4>
+                                                                        
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- central meta -->
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="/js/main.min.js"></script>
+    <script src="/js/script.js"></script>
+<script>
+  $(document).ready(function() {
+    $('[id^="friendName-"]').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var userId = [[${session.user.id}]]; // Pass the user ID from Thymeleaf
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      console.log(userId); // Corrected from console(userId) to console.log(userId)
+
+      if (friendId == userId) {
+        // If friendId is equal to userId, redirect directly to the new page
+        window.location.href = '/timeline';
+      } else {
+        // Otherwise, use AJAX to fetch the timeline data
+        $.ajax({
+          url: '/friendtimeline', // Your endpoint for the friend timeline
+          type: 'GET',
+          data: { id: friendId }, // Pass the friend ID as a query parameter
+          success: function(response) {
+            // Handle the response from the server
+            window.location.href = '/friendtimeline?id=' + friendId;
+            // Optionally update the page with the timeline data here
+          },
+          error: function(xhr, status, error) {
+            // Handle any errors that occur
+            console.error('Error fetching timeline:', error);
+          }
+        });
+      }
+    });
+  });
+</script>
+</body>
+
+</html>

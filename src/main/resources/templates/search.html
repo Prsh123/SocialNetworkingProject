@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+    <title>Concordia</title>
+    <link rel="icon" href="images/fav.png" type="image/png" sizes="16x16">
+
+    <link rel="stylesheet" href="css/main.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/color.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/search_result.css">
+
+    <style>
+        .col-lg-3::-webkit-scrollbar {
+            display: none;
+        }
+
+        .col-lg-3 {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .col-lg-2::-webkit-scrollbar {
+            display: none;
+        }
+
+        .col-lg-2 {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!--This is top bar-->
+    <div th:insert="navbar.html"></div>
+    <!-- topbar -->
+
+    <section>
+        <div class="gap gray-bg" style="padding: 100px 0;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row" id="page-contents">
+                            <div class="col-lg-2">
+                                <aside class="sidebar static">
+                                    <!--left bar-->
+                                    <div th:insert="shortcuts.html"></div>
+                                    <!-- Shortcuts -->
+                                </aside>
+                                <aside class="sidebar static" id="friend_request" style="height: 50vh; overflow-y: scroll;">
+                                    <!-- Friend Request Sidebar -->
+                                </aside>
+                            </div><!-- sidebar -->
+
+                            <div class="col-lg-5">
+                                <section class="container-fluid" id="main-body">
+                                    <div id="miiid">
+                                        <div class="row no-pad">
+                                            <div class="col-md no-pad">
+                                                <div class="middle-section search-result-box">
+                                                    <div class="search-result-box-header">
+                                                        <i class="fa fa-users" aria-hidden="true"></i>
+                                                        <span>PEOPLE</span>
+                                                    </div>
+                                                    <div class="search-result-box-content">
+                                                        <div th:insert="search_result.html"></div>
+                                                    </div>
+                                                    <div class="search-result-box-footer"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div><!-- centerl meta -->
+
+                            <div class="col-lg-2" style="height: 100vh; overflow-y: scroll;">
+                                <aside class="sidebar static" id="friend_suggestion" style="height: 50vh; overflow-y: scroll;">
+                                    <!-- Friend Suggestion Sidebar -->
+                                </aside>
+                            </div><!-- sidebar -->
+
+                            <div class="col-lg-3" style="position: fixed; top: 1; right: 0; height: 100vh; overflow-y: scroll;">
+                                <aside class="sidebar static" id="friend_list">
+                                    <!-- Friend List Sidebar -->
+                                </aside>
+                            </div><!-- sidebar -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="js/main.min.js"></script>
+    <script src="js/script.js"></script>
+
+    <script>
+        $(function () {
+            $.ajax({
+                url: 'friendlist',
+                type: 'GET',
+                success: function (data) {
+                    $('#friend_list').html(data);
+                },
+                error: function (e) {
+                    alert('Error loading ajax: ' + e);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $.ajax({
+                url: 'friendrequest',
+                type: 'GET',
+                success: function (data) {
+                    $('#friend_request').html(data);
+                },
+                error: function (e) {
+                    alert('Error loading ajax: ' + e);
+                }
+            });
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $.ajax({
+                url: 'friendsuggestion',
+                type: 'GET',
+                success: function (data) {
+                    $('#friend_suggestion').html(data);
+                },
+                error: function () {
+                    alert('Cannot load suggested friends');
+                }
+            });
+        });
+    </script>
+
+
+    <script>
+        function searchAndDisplayFriends() {
+        	var searchValue = $('#search-friend').val();
+            $.ajax({
+                url: 'searchfriendajax',
+                type: 'GET',
+                data: {
+                	'search-friend': searchValue === "" ? null : searchValue
+                },
+                dataType: 'json',
+                success: function (response) {
+                    $('.search-result-box-content').empty();
+                    var results = response.results;
+                    if (results.length === 0) {
+                        $('.search-result-box-content').html('<h4>No results</h4>');
+                    } else {
+                        results.forEach(function (friend) {
+                            console.log(friend.mutual_no);
+                            var content = '<div class="search-result-box-content-item">' +
+                                '<img src="data:image/png;base64,' + friend.avatar + '" style="margin-right: 20px;margin-bottom: 20px">' +
+                                '<span>' +
+                                '<a href="#" id="friendName-' + friend.id + '">' + friend.fname + ' ' + friend.lname + '</a>' +
+                                '<a href="#">' + friend.mutual_no + ' mutual friends</a>' +
+                                '</span>';
+                            if (friend.friend == "friend") {
+                                content += '<button><i class="fa fa-check" aria-hidden="true"></i> Friends</button>';
+                            } else if (friend.friend == "requested") {
+                                content += '<button><i class="fa fa-hourglass-half" aria-hidden="true"></i> Request Sent</button>';
+                            } else if(friend.friend=="nofriend") {
+                                content += '<button type="button" class="addfriend-dn" data-id="' + friend.id + '">' +
+                                    '<i class="fa fa-user-plus"></i> Add Friend</button>';
+                            }else if(friend.friend=="self"){
+                            	content += '<button type="button">'+
+                                '<i class="fa fa-user"></i> Current User</button>';
+                            }
+                            content += '</div>';
+                            $('.search-result-box-content').append(content);
+                        });
+                    }
+                },
+                error: function () {
+                    alert('Cannot perform searching');
+                }
+            });
+        }
+
+        $(function () {
+            $('#search-friend').keyup(function () {
+                searchAndDisplayFriends();
+            });
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $(document).on('click', '.addfriend-dn', function () {
+                var friendId = $(this).data('id');
+                $.ajax({
+                    url: 'friend-friends',
+                    type: 'POST',
+                    data: {
+                        friendId: friendId
+                    },
+                    success: function () {
+                        searchAndDisplayFriends();
+                    },
+                    error: function () {
+                        alert('Cannot add friend');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        $(function () {
+            $('.addfriend').click(function () {
+                var friendId = $(this).data('id');
+                $.ajax({
+                    url: 'friend-friends',
+                    type: 'POST',
+                    data: {
+                        friendId: friendId
+                    },
+                    success: function () {
+                        location.reload();
+                    },
+                    error: function () {
+                        alert('Cannot add friend');
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+  $(document).ready(function() {
+    $('[id^="friendName-"]').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var userId = [[${session.user.id}]]; // Pass the user ID from Thymeleaf
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      console.log(userId); // Corrected from console(userId) to console.log(userId)
+
+      if (friendId == userId) {
+        // If friendId is equal to userId, redirect directly to the new page
+        window.location.href = '/timeline';
+      } else {
+        // Otherwise, use AJAX to fetch the timeline data
+        $.ajax({
+          url: '/friendtimeline', // Your endpoint for the friend timeline
+          type: 'GET',
+          data: { id: friendId }, // Pass the friend ID as a query parameter
+          success: function(response) {
+            // Handle the response from the server
+            window.location.href = '/friendtimeline?id=' + friendId;
+            // Optionally update the page with the timeline data here
+          },
+          error: function(xhr, status, error) {
+            // Handle any errors that occur
+            console.error('Error fetching timeline:', error);
+          }
+        });
+      }
+    });
+  });
+</script>
+</body>
+
+</html>

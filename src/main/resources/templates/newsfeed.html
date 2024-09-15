@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+				<html lang="en">
+
+
+				<head>
+					<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+					<meta name="viewport" content="width=device-width, initial-scale=1.0">
+					<meta name="description" content="" />
+					<meta name="keywords" content="" />
+					<title>Concordia</title>
+					<link rel="icon" href="images/fav.png" type="image/png" sizes="16x16">
+
+					<link rel="stylesheet" href="css/main.min.css">
+					<link rel="stylesheet" href="css/style.css">
+					<link rel="stylesheet" href="css/color.css">
+					<link rel="stylesheet" href="css/responsive.css">
+<style>
+.col-lg-3::-webkit-scrollbar {
+    display: none; /* Hides the scrollbar in WebKit-based browsers (Chrome, Safari) */
+}
+
+.col-lg-3 {
+    -ms-overflow-style: none;  /* Hides the scrollbar in Internet Explorer and Edge */
+    scrollbar-width: none;  /* Hides the scrollbar in Firefox */
+}
+.col-lg-2::-webkit-scrollbar {
+    display: none; /* Hides the scrollbar in WebKit-based browsers (Chrome, Safari) */
+}
+
+.col-lg-2 {
+    -ms-overflow-style: none;  /* Hides the scrollbar in Internet Explorer and Edge */
+    scrollbar-width: none;  /* Hides the scrollbar in Firefox */
+}
+.liked {
+    color: blue;
+}
+.liked .ti-heart {
+    color: blue;/* Increase the outline size */
+}
+
+</style>
+				</head>
+
+				<body>
+
+					<!--This is top bar-->
+					<div th:insert="navbar.html"></div>
+						<!-- topbar -->
+
+
+						<section>
+							<div class="gap gray-bg" style="padding: 100px 0;">
+								<div class="container-fluid">
+									<div class="row">
+										<div class="col-lg-12">
+											<div class="row" id="page-contents">
+												<div class="col-lg-2">
+													<aside class="sidebar static">
+														<!--left bar-->
+														<div th:insert="shortcuts.html"></div>
+															<!-- Shortcuts -->
+													</aside>
+													<aside class="sidebar static" id="friend_request" style="height: 50vh; overflow-y: scroll;">
+														<!--Friend List Add Sidebar-->
+
+														<!-- friends list Add sidebar -->
+													</aside>
+												</div><!-- sidebar -->
+												<div class="col-lg-5">
+													<div class="central-meta">
+														<div class="new-postbox">
+														    <!-- Display user avatar in the post creation box -->
+														    <figure>
+														        <img th:src="'data:image/jpeg;base64,' + ${session.user.avatar}" 
+														             alt="User Avatar" 
+														             style="width: 44.100px; height: 44.100px;">
+														    </figure>
+														
+														    <!-- Post creation form -->
+														    <div class="newpst-input">
+														        <form id="post-form" enctype="multipart/form-data" 
+														              method="post" th:action="@{/contentpost}">
+														            <!-- Include hidden input for source page -->
+														            <input type="hidden" name="sourcePage" value="newsfeed">
+														
+														            <!-- Input field for post content -->
+														            <input type="text" name="post-content" placeholder="What's on your mind?" style="width: 100%;">
+														
+														            <!-- File attachment and post button -->
+														            <div class="attachments">
+														                <ul>
+														                    <li>
+														                        <i class="fa fa-image"></i>
+														                        <label class="fileContainer">
+														                            <input type="file" id="post-image" name="post-image">
+														                        </label>
+														                    </li>
+														                    <li>
+														                        <button type="submit" id="button-post">Post</button>
+														                    </li>
+														                </ul>
+														            </div>
+														        </form>
+														    </div>
+														</div>
+
+													</div><!-- add post new box -->
+
+
+													<div th:with="list=${session.post_list}">
+													    <div th:each="post : ${list}">
+													        <div class="central-meta item">
+													            <div class="user-post">
+													                <div class="friend-info">
+													                    <figure>
+													                        <!-- User avatar -->
+													                        <img th:src="'data:image/jpg;base64,' + ${post.poster.get().avatar}" 
+													                             alt="User Avatar" 
+													                             style="width: 44.100px; height: 44.100px;">
+													                    </figure>
+													
+													                    <div class="friend-name">
+													                        <ins>
+													                            <a href="#" th:id="'friendName-'+${post.poster.get().id}"  th:data-friend-id="${post.poster.get().id}"
+													                               th:title="${post.poster.get().fname + ' ' + post.poster.get().lname}">
+													                               <span th:text="${post.poster.get().fname} + ' ' + ${post.poster.get().lname}"></span>
+													                            </a>
+													                        </ins>
+													                        <span th:text="'Posted: ' + ${post.post_time}"></span>
+													                    </div>
+													
+													                    <div class="post-meta">
+													                        <div class="description">
+													                            <hr>
+													                            <p th:text="${post.content}"></p>
+													                            <hr>
+													                        </div>
+													
+													                        <!-- Post image (if exists) -->
+													                        <img th:if="${post.image != null and post.image.trim() != ''}" 
+																			     th:src="'data:image/jpg;base64,' + ${post.image}" 
+																			     alt="Post Image">
+													
+													                        <div class="we-video-info">
+													                            <ul>
+													                                <li>
+													                                    <!-- Like button logic -->
+													                                    <span th:classappend="'like' + (${post.liked} ? ' liked' : '')" 
+													                                          th:id="'like-' + ${post.id}" 
+													                                          th:value="${post.id}"
+													                                          data-toggle="tooltip" title="like" 
+													                                          th:data-post-id="${post.id}">
+													                                        <i class="ti-heart"></i>
+													                                        <ins th:text="${post.likes}"></ins> <!-- Display like count -->
+													                                    </span>
+													                                </li>
+													                            </ul>
+													                        </div>
+													                    </div>
+													                </div>
+													
+													                <div class="coment-area">
+													                    <ul class="we-comet">
+													                        <!-- Iterate through comments -->
+													                        <div th:each="comment : ${post.commentList}">
+													                            <li>
+													                                <div class="comet-avatar">
+													                                    <!-- Commenter avatar -->
+													                                    <img th:src="'data:image/jpeg;base64,' + ${comment.commenter.get().avatar}" 
+													                                         alt="Commenter Avatar" 
+													                                         style="width: 44.100px; height: 44.100px;">
+													                                </div>
+													
+													                                <div class="we-comment">
+													                                    <div class="coment-head">
+													                                        <h5>
+													                                            <a href="#" th:id="'friendName-'+${comment.commenter.get().id}"  th:data-friend-id="${comment.commenter.get().id}"
+													                                               th:title="${comment.commenter.get().fname} + ' ' + ${comment.commenter.get().lname}">
+													                                               <span th:text="${comment.commenter.get().fname} + ' ' + ${comment.commenter.get().lname}"></span>
+													                                            </a>
+													                                        </h5>
+													                                        <span th:text="'Commented: ' + ${comment.postTime}"></span>
+													                                    </div>
+													                                    <p th:text="${comment.content}"></p>
+													                                </div>
+													                            </li>
+													                        </div>
+													
+													                        <!-- Comment input section -->
+													                        <li class="post-comment">
+													                            <div class="comet-avatar">
+													                                <img th:src="'data:image/jpg;base64,' + ${session.user.avatar}" 
+													                                     alt="User Avatar" 
+													                                     style="width: 33.8px; height: 33.8px;">
+													                            </div>
+													
+													                            <div class="post-comt-box">
+													                                <div class="user-post-reply-editor" 
+													                                     contenteditable="true" 
+													                                     style="border:1px solid #000">
+													                                </div>
+													
+													                                <button type="button" 
+													                                        class="button-add-comment" 
+													                                        th:data-post-id="${post.id}">
+													                                    Add
+													                                </button>
+													                            </div>
+													                        </li>
+													                    </ul>
+													                </div>
+													            </div>
+													        </div>
+													    </div>
+													</div>
+
+
+												</div><!-- centerl meta -->
+												<div class="col-lg-2 widget friend-list stick-widget" style="height:350px; overflow-y: scroll;">
+													<aside class="sidebar static" id="friend_suggestion" style="height: 350px; overflow-y: scroll;">
+														<!--Friend List Add Sidebar-->
+
+														<!-- friends list Add sidebar -->
+													</aside>
+													
+												</div><!-- sidebar -->
+												<div class="col-lg-3 widget friend-list stick-widget"  style="position: fixed; top: 1; right: 0; height: 645px; overflow-y: scroll;">
+													<aside class="sidebar static" id="friend_list" >
+														<!--Friend List Sidebar-->
+
+														<!-- friends list sidebar -->
+													</aside>
+												</div><!-- sidebar -->
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</section>
+
+						<script src="js/main.min.js"></script>
+						<script src="js/script.js"></script>
+
+						
+						
+						<script>
+							$(function () {
+								$.ajax({
+									url: 'friendrequest',
+									type: 'GET',
+									success: function (data) {
+										$('#friend_request').html(data);
+
+									},
+									error: function (e) {
+										alert('Error loading ajax friendrequest: ' + e);
+									}
+								});
+								// other code
+							});
+						</script>
+
+						<script>
+							$(function () {
+								$.ajax({
+									url: 'friendlist',
+									type: 'GET',
+									success: function (data) {
+										$('#friend_list').html(data);
+									},
+									error: function (e) {
+										alert('Error loading ajax: ' + e);
+									}
+								});
+								// other code
+							});
+						</script>
+						
+						<script>
+							$(function () {
+								$.ajax({
+									url: 'friendsuggestion',
+									type: 'GET',
+									success: function (data) {
+										$('#friend_suggestion').html(data);
+									},
+									error: function () {
+										alert('cannot load suggested friends');
+									}
+								});
+								// other code
+							});
+						</script>
+
+						<script>
+							$(function () {
+								// Handle add post request
+								$('#button-post').click(function (e) {
+									location.reload();
+								});
+								// other code
+							});
+							
+							$(document).ready(function () {
+							    // Delegate event to dynamically handle like/unlike request
+							    $(document).on('click', '.like', function (e) {
+							        e.preventDefault(); // Prevent default behavior if needed
+
+							        let $this = $(this);
+							        let postId = $this.attr('value');
+							        let isLiked = $this.hasClass('liked');
+							        console.log(postId);
+							        console.log(isLiked);
+							        $.ajax({
+							            url: isLiked ? 'unlike' : 'like', // Use 'unlike' if already liked
+							            type: 'post',
+							            dataType: 'json',
+							            data: {
+							                'post-id': postId
+							            },
+							            success: function (data) {
+							                if (data.result === "OK") {
+							                    // Toggle the 'liked' class based on the current state
+							                    $this.toggleClass('liked');
+							                    $this.find('i').toggleClass('liked');
+							                    $this.find('ins').text(data.likecount);
+							                    console.log(data.likecount);
+							                } else {
+							                    alert('Cannot process request. Try again later!');
+							                }
+							            },
+							            error: function () {
+							                alert('Serious errors. Sorry!');
+							            }
+							        });
+							    });
+							});
+
+							
+							
+							$(function () {
+								// Handle add comment
+								$('.post-comt-box button').click(function () {
+									let postId = $(this).attr('data-post-id');
+									let commentContent = $(this).closest('.central-meta').find('.user-post-reply-editor').html();
+									commentContent = commentContent.replace(/<div><br><\/div>/g, '\n')
+                                    .replace(/<div>/g, '\n')
+                                    .replace(/<\/div>/g, '')
+                                    .replace(/<br>/g, '\n');
+									$.ajax({
+										url: 'commentpost',
+										type: 'POST',
+										dataType: 'json',
+										data: {
+
+											'post-content': commentContent,
+											'post-id': postId
+
+										},
+										success: function (data) {
+											if (data.result === "OK") {
+												// reload current page to re-sort posts
+												location.reload();
+											} else {
+												alert('Cannot add new comment. Try again later!');
+											}
+										},
+										error: function () {
+											alert('Serious errors. Sorry!');
+										}
+									});
+								});
+								// other code
+							});
+						</script>
+<script>
+  $(document).ready(function() {
+    $('[id^="friendName-"]').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var userId = [[${session.user.id}]]; // Pass the user ID from Thymeleaf
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      console.log(userId); // Corrected from console(userId) to console.log(userId)
+
+      if (friendId == userId) {
+        // If friendId is equal to userId, redirect directly to the new page
+        window.location.href = '/timeline';
+      } else {
+        // Otherwise, use AJAX to fetch the timeline data
+        $.ajax({
+          url: '/friendtimeline', // Your endpoint for the friend timeline
+          type: 'GET',
+          data: { id: friendId }, // Pass the friend ID as a query parameter
+          success: function(response) {
+            // Handle the response from the server
+            window.location.href = '/friendtimeline?id=' + friendId;
+            // Optionally update the page with the timeline data here
+          },
+          error: function(xhr, status, error) {
+            // Handle any errors that occur
+            console.error('Error fetching timeline:', error);
+          }
+        });
+      }
+    });
+  });
+</script>
+
+
+
+
+
+
+				</body>
+
+				</html>

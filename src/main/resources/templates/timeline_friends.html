@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Insert title here</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+     <title th:text="${session.user.fname} + ' ' + ${session.user.lname}"></title>
+    <link rel="icon" href="images/fav.png" type="image/png" sizes="16x16">
+    <link rel="stylesheet" href="css/main.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/color.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body>
+    <!--This is top bar-->
+    <div th:insert="navbar.html"></div>
+    <div th:insert="profile_nav.html"></div>
+    <!-- topbar -->
+
+    <section>
+        <div class="gap gray-bg" style="padding: 100px 0;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="row" id="page-contents">
+                            <div class="col-lg-3">
+                                <aside class="sidebar static">
+                                    <!--left bar-->
+                                    <div th:replace="edit_bar.html"></div>
+                                    <!-- Shortcuts -->
+                                </aside>
+                            </div><!-- sidebar -->
+                            <div class="col-lg-6">
+                                <div class="central-meta">
+                                    <div class="frnds">
+                                        <ul class="nav nav-tabs">
+                                            <li class="nav-item">
+                                                <a class="active" href="#frends" data-toggle="tab">My Friends</a>
+                                                <span th:text="${session.user_friend_no}"></span>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="" href="#frends-req" data-toggle="tab">Friend Requests</a>
+                                                <span th:text="${session.friend_request_no}"></span>
+                                            </li>
+                                        </ul>
+
+                                        <!-- Tab panes -->
+                                        <div class="tab-content">
+                                            <div class="tab-pane active fade show" id="frends">
+                                                <ul class="nearby-contct">
+                                                        <li th:id="${friend.id}" th:each="friend : ${session.friend_list}">
+                                                            <div class="nearly-pepls">
+                                                                <figure>
+                                                                    <img th:src="'data:image/jpeg;base64,' + ${friend.avatar}"  class="avatar-small"style="width:60px;height:60px">
+                                                                </figure>
+                                                                <div class="pepl-info">
+                                                                    <h4>
+                                                                        <a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+                                                                         th:text="${friend.fname} + ' ' + ${friend.lname}"></a>
+                                                                    </h4>
+                                                                    <a href="#" th:data-id="${friend.id}" class="add-butn more-action unfriend" data-ripple="">unfriend</a>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="tab-pane fade" id="frends-req">
+                                                <ul class="nearby-contct">
+                                                        <li th:each="friend : ${session.friend_requests}">
+                                                            <div class="nearly-pepls">
+                                                                <figure>
+                                                                    <img th:src="'data:image/jpeg;base64,' + ${friend.avatar}"  class="avatar-small" style="width:60px;height:60px">
+                                                                </figure>
+                                                                <div class="pepl-info">
+                                                                    <h4>
+                                                                        <a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+                                                                         th:text="${friend.fname} + ' ' + ${friend.lname}"></a>
+                                                                    </h4>
+                                                                    <a href="#" th:data-id="${friend.id}" class="add-butn accept-button add-butn" data-ripple="">Accept</a>
+                                                                    <a href="#" th:data-id="${friend.id}" class="add-butn more-action decline-button add-butn" data-ripple="">Decline</a>
+                                                                </div>
+                                                            </div>
+                                                        </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- centerl meta -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+						<script>
+							$(function () {
+								$.ajax({
+									url: 'friendrequest',
+									type: 'GET',
+									success: function (data) {
+										$('#friend_request').html(data);
+
+									},
+									error: function (e) {
+										alert('Error loading ajax friendrequest: ' + e);
+									}
+								});
+								// other code
+							});
+						</script>
+
+						<script>
+							$(function () {
+								$.ajax({
+									url: 'friendlist',
+									type: 'GET',
+									success: function (data) {
+										$('#friend_list').html(data);
+									},
+									error: function (e) {
+										alert('Error loading ajax flist: ' + e);
+									}
+								});
+								// other code
+							});
+						</script>
+    <script th:inline="javascript">
+        $(function () {
+            // Handle Accept Button Click
+            $('.accept-button').click(function () {
+                var friendId = $(this).data('id');
+                $.ajax({
+                    url: 'friendrequest',
+                    type: 'POST',
+                    data: {
+                        friendId: friendId,
+                        action: 'accept'
+                    },
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function () {
+                        alert('Cannot accept friend');
+                    }
+                });
+            });
+
+            // Handle Decline Button Click
+            $('.decline-button').click(function () {
+                var friendId = $(this).data('id');
+                $.ajax({
+                    url: 'friendrequest',
+                    type: 'POST',
+                    data: {
+                        friendId: friendId,
+                        action: 'decline'
+                    },
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function () {
+                        alert('Cannot decline friend');
+                    }
+                });
+            });
+
+            // Handle Unfriend
+            $('.unfriend').click(function () {
+                var friendId = $(this).data('id');
+                $.ajax({
+                    url: 'unfriend',
+                    type: 'POST',
+                    data: {
+                        friendId: friendId,
+                        action: 'timeline-friends'
+                    },
+                    success: function (data) {
+                        location.reload();
+                    },
+                    error: function () {
+                        alert('Cannot unfriend');
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script src="js/main.min.js"></script>
+    <script src="js/script.js"></script>
+
+</body>
+
+</html>

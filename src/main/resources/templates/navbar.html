@@ -1,0 +1,30 @@
+<nav class="container-fluid"style="padding-left:0px;">
+        
+<div class="topbar"style="position: fixed; top: 0px; width: 100%;">
+<div class="row">
+	<div class=" col-lg-2 logo">
+		<a title="" href="newsfeed"><img src="images/logo.png" style=" padding-top:5px" alt=""></a>
+	</div>
+
+                <div class="col-lg-5" id="user-tools-left" style="padding-top:10px;">
+                    <form action="searchfriend" method="get" autocomplete="off">
+                            <div id="search-box">
+                                <input type="text" name="search-friend" id="search-friend"  style="width: 90%";>
+                                <button type="submit"><i class="fa fa-search"></i></button>
+                            </div>
+                    </form>
+                </div>
+	<div class="col-lg-5 top-area">
+
+
+
+		<div class="user-img" th:if="${session.user != null}">
+                    <img th:src="'data:image/jpeg;base64,' + ${#strings.trim(session.user.avatar)}" 
+         alt="User Avatar" style="width: 44.1px; height: 44.1px;">
+                </div>
+		<a href="logout" title=""><i class="ti-power-off"></i>Log out</a>
+
+	</div>
+</div><!-- topbar -->
+</div>
+</nav>

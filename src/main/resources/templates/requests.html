@@ -1,0 +1,107 @@
+
+<div class="widget friend-list stick-widget">
+    <h4 class="widget-title">Friend Requests</h4>
+    <ul id="people-list" class="friendz-list">
+        <!-- Iterate through the friend requests list stored in session -->
+        <div th:each="friend : ${session.friend_requests}">
+            <div class="friend-request">
+                <figure>
+                    <!-- If the friend's avatar is not empty, show the Base64 image -->
+                    <img class="avatar-small" th:if="${friend.avatar != null}" th:src="'data:image/jpeg;base64,' + ${friend.avatar}" alt="Friend Avatar">
+                    <!-- Otherwise, show the default avatar -->
+                    <img class="avatar-small" th:unless="${friend.avatar != null}" th:src="@{/images/resources/friend-avatar.jpg}" alt="Default Avatar">
+                </figure>
+                <div class="friendz-meta">
+                    <!-- Friend's full name and link to their timeline -->
+                    <a href="#" th:id="'friendName-'+${friend.id}"  th:data-friend-id="${friend.id}"
+                    th:text="${friend.fname} + ' ' + ${friend.lname}"></a>
+
+                    <!-- Accept and Decline buttons -->
+                    <button type="submit" th:data-id="${friend.id}" class="btn btn-primary btn-sm accept-button"
+                            style="opacity: 0.8; font-size: 10px; padding: 4px 8px;">
+                        Accept
+                    </button>
+                    <button type="submit" th:data-id="${friend.id}" class="btn btn-secondary btn-sm decline-button"
+                            style="opacity: 0.8; font-size: 10px; padding: 4px 8px;">
+                        Decline
+                    </button>
+                </div>
+            </div>
+        </div>
+    </ul>
+</div>
+<script>
+    $(function () {
+        // Handle Accept Button Click
+        $('.accept-button').click(function () {
+            var friendId = $(this).data('id');
+            $.ajax({
+                url: 'friendrequest',
+                type: 'POST',
+                data: {
+                    friendId: friendId,
+                    action: 'accept'
+                },
+                success: function (data) {
+                    $('#friend_list').load("friendlist");
+                    $('#friend_request').load("friendrequest");
+                },
+                error: function () {
+                    alert('Cannot accept friend');
+                }
+            });
+        });
+
+        // Handle Decline Button Click
+        $('.decline-button').click(function () {
+            var friendId = $(this).data('id');
+            $.ajax({
+                url: 'friendrequest',
+                type: 'POST',
+                data: {
+                    friendId: friendId,
+                    action: 'decline'
+                },
+                success: function (data) {
+                    $('#friend_list').load("friendlist");
+                    $('#friend_request').load("friendrequest");
+                },
+                error: function () {
+                    alert('Cannot decline friend');
+                }
+            });
+        });
+    });
+
+  $(document).ready(function() {
+    $('[id^="friendName-"]').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var userId = [[${session.user.id}]]; // Pass the user ID from Thymeleaf
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      console.log(userId); // Corrected from console(userId) to console.log(userId)
+
+      if (friendId == userId) {
+        // If friendId is equal to userId, redirect directly to the new page
+        window.location.href = '/timeline';
+      } else {
+        // Otherwise, use AJAX to fetch the timeline data
+        $.ajax({
+          url: '/friendtimeline', // Your endpoint for the friend timeline
+          type: 'GET',
+          data: { id: friendId }, // Pass the friend ID as a query parameter
+          success: function(response) {
+            // Handle the response from the server
+            window.location.href = '/friendtimeline?id=' + friendId;
+            // Optionally update the page with the timeline data here
+          },
+          error: function(xhr, status, error) {
+            // Handle any errors that occur
+            console.error('Error fetching timeline:', error);
+          }
+        });
+      }
+    });
+  });
+</script>

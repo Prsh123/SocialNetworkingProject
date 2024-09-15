@@ -1,0 +1,145 @@
+<div class="feature-photo">
+            <figure>
+                <!-- Use Thymeleaf syntax for conditional image rendering -->
+                <img th:src="'data:image/jpeg;base64,' + ${#strings.trim(session.friend.cover)}" alt="User Cover Photo" style="width: 1519.200px; height: 444.850px;">
+            </figure>
+            <div class="container-fluid">
+                <div class="row merged">
+                    <div class="col-lg-2 col-sm-3">
+                        <div class="user-avatar">
+                            <figure>
+                                <!-- Use Thymeleaf syntax for conditional image rendering -->
+                                <img th:src="'data:image/jpeg;base64,' + ${#strings.trim(session.friend.avatar)}" alt="User Avatar" style="width: 222.863px; height: 218.0px;">
+                            </figure>
+                        </div>
+                    </div>
+                    <div class="col-lg-10 col-sm-9">
+                        <div class="timeline-info">
+                            <ul>
+                                <li class="admin-name">
+                                    <h5 th:text="${session.friend.fname} + ' ' + ${session.friend.lname}"></h5>
+                                </li>
+                                <li>
+                                   
+                                <a id="timeline" href="#" title="" th:data-friend-id="${session.friend.id}" data-ripple="">Timeline</a>
+                                <a id="friends" href="#" th:data-friend-id="${session.friend.id}"  title="" data-ripple="">Friends</a>
+                                
+									
+									
+									<!-- Render the correct button based on isFriend -->
+									<a th:if="${session.isFriend}" href="#" title="" th:data-id="${session.friend.id}" class="add-butn unfriend" style="background-color: grey" data-ripple="">Unfriend</a>
+<a th:if="${not session.isFriend}" href="#" title="" th:data-id="${session.friend.id}" class="add-butn addfriend" data-ripple="">Add Friend</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+$(function () {
+    $('.addfriend').click(function () {
+    	var friendId = $(this).data('id');
+        $.ajax({
+            url: 'sendRequest',
+            type: 'POST',
+            data: {
+                friendId: friendId
+            },
+            success: function (data) {
+            	location.reload();
+            },
+            error: function () {
+                alert('Cannot add friend');
+            }
+        });
+    });
+});
+					$(function () {
+						
+						$('.unfriend').click(function () {
+							var friendId = $(this).data('id');
+							$.ajax({
+								url: 'unfriendfriend',
+								type: 'POST',
+								data: {
+									friendId: friendId,
+									action: 'friend'
+								},
+								success: function (data) {
+									location.reload();
+								},
+								error: function () {
+									alert('Cannot unfriend friend');
+								}
+							});
+						});
+					});
+				</script>
+<script>
+	$(document).ready(function() {
+	    // Get the current URL
+	    var currentUrl = window.location.pathname;
+	
+	    // Determine the active page based on the URL
+	    if (currentUrl.includes('friendfriends')) {
+	        $('#friends').addClass('active');
+	    } else if (currentUrl.includes('friendtimeline')) {
+	        $('#timeline').addClass('active');
+	    }
+	});
+  
+</script>
+
+<script>
+  $(document).ready(function() {
+    $('#timeline').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      $.ajax({
+        url: '/friendtimeline', // Your endpoint for the friend timeline
+        type: 'GET',
+        data: { id: friendId }, // Pass the friend ID as a query parameter
+        success: function(response) {
+          // Handle the response from the server
+          window.location.href = '/friendtimeline?id=' + friendId;
+          console.log('Timeline data:', response);
+          // You can update the page with the timeline data here
+        },
+        error: function(xhr, status, error) {
+          // Handle any errors that occur
+          console.error('Error fetching timeline:', error);
+        }
+      });
+    });
+  });
+</script>
+<script>
+  $(document).ready(function() {
+    $('#friends').click(function(event) {
+      event.preventDefault(); // Prevent the default link behavior
+
+      var friendId = $(this).data('friend-id'); // Get the friend ID from the data attribute
+
+      $.ajax({
+        url: '/friendfriends', // Your endpoint for the friend timeline
+        type: 'GET',
+        data: { id: friendId }, // Pass the friend ID as a query parameter
+        success: function(response) {
+          // Handle the response from the server
+          window.location.href = '/friendfriends?id=' + friendId;
+          console.log('Timeline data:', response);
+          // You can update the page with the timeline data here
+        },
+        error: function(xhr, status, error) {
+          // Handle any errors that occur
+          console.error('Error fetching timeline:', error);
+        }
+      });
+    });
+  });
+</script>
